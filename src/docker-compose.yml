@@ -1,0 +1,26 @@
+version: '3.9'
+
+services:
+  sample.gateway:
+    image: ${DOCKER_REGISTRY-}sample-gateway
+    build:
+      context: .
+      dockerfile: Sample.Gateway/Dockerfile
+
+  sample.aggregator:
+    image: ${DOCKER_REGISTRY-}sample-aggregator
+    build:
+      context: .
+      dockerfile: Sample.Aggregator/Dockerfile
+
+  sample.serviceone:
+    image: ${DOCKER_REGISTRY-}sample-serviceone
+    build:
+      context: .
+      dockerfile: Sample.ServiceOne/Dockerfile
+
+  sample.servicetwo:
+    image: ${DOCKER_REGISTRY-}sample-servicetwo
+    build:
+      context: .
+      dockerfile: Sample.ServiceTwo/Dockerfile
