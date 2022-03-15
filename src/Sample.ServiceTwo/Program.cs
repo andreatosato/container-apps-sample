@@ -9,13 +9,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.MapGet("/servicetwotext", () =>
 {
     return Results.Ok(new { TextFromService = "FromServiceTwo" });
 })
-.WithName("GetServiceOneText");
+.WithName("GetServiceTwoText");
 
 app.Run();

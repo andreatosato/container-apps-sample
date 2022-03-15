@@ -23,7 +23,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.MapGet("/texts", async (IHttpClientFactory clientFactory) =>
 {
@@ -31,9 +31,10 @@ app.MapGet("/texts", async (IHttpClientFactory clientFactory) =>
     var serviceTwo = clientFactory.CreateClient(HttpConfigurations.ClientNameTwo);
     var response = new AggregatorResponse();
     var responseOne = await serviceOne.GetFromJsonAsync<TextResponse>("/serviceonetext");
-    var responseTwo = await serviceOne.GetFromJsonAsync<TextResponse>("/servicetwotext");
+    var responseTwo = await serviceTwo.GetFromJsonAsync<TextResponse>("/servicetwotext");
 
     response.AggregatorValue = $"{responseOne!.TextFromService} - {responseTwo!.TextFromService}";
+    return Results.Ok(response);
 })
 .WithName("GetAggregateTexts");
 
