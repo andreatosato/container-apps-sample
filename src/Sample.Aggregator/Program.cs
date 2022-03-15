@@ -1,13 +1,22 @@
-var builder = WebApplication.CreateBuilder(args);
+using Microsoft.Extensions.Options;
+using Sample.Aggregator;
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.Configure<HttpConfigurations>(builder.Configuration.GetSection("HttpConfigurations"));
+builder.Services.AddHttpClient(HttpConfigurations.ClientNameOne, (sp, h) =>
+{
+    h.BaseAddress = new Uri(sp.GetService<IOptions<HttpConfigurations>>()!.Value!.ServiceOneUrl);
+});
 
+builder.Services.AddHttpClient(HttpConfigurations.ClientNameTwo, (sp, h) =>
+{
+    h.BaseAddress = new Uri(sp.GetService<IOptions<HttpConfigurations>>()!.Value!.ServiceTwoUrl);
+});
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -16,28 +25,16 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
+app.MapGet("/texts", async (IHttpClientFactory clientFactory) =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    var serviceOne = clientFactory.CreateClient(HttpConfigurations.ClientNameOne);
+    var serviceTwo = clientFactory.CreateClient(HttpConfigurations.ClientNameTwo);
+    var response = new AggregatorResponse();
+    var responseOne = await serviceOne.GetFromJsonAsync<TextResponse>("/serviceonetext");
+    var responseTwo = await serviceOne.GetFromJsonAsync<TextResponse>("/servicetwotext");
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-       new WeatherForecast
-       (
-           DateTime.Now.AddDays(index),
-           Random.Shared.Next(-20, 55),
-           summaries[Random.Shared.Next(summaries.Length)]
-       ))
-        .ToArray();
-    return forecast;
+    response.AggregatorValue = $"{responseOne!.TextFromService} - {responseTwo!.TextFromService}";
 })
-.WithName("GetWeatherForecast");
+.WithName("GetAggregateTexts");
 
 app.Run();
-
-internal record WeatherForecast(DateTime Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
